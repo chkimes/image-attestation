@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/chkimes/image-attestation/internal"
 	"github.com/in-toto/scai-demos/scai-gen/pkg/fileio"
+	"github.com/in-toto/scai-demos/scai-gen/pkg/generators"
 
 	//slsa "github.com/in-toto/attestation/go/predicates/provenance/v1"
 	ita "github.com/in-toto/attestation/go/v1"
@@ -14,9 +15,9 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "image-attestor",
+	Use:   "attestor",
 	Args:  cobra.ExactArgs(1),
-	Short: "Generates a JSON-encoded image attestation (in-toto format)",
+	Short: "Generates a JSON-encoded VM image attestation (in-toto format)",
 	RunE:  genAttestation,
 }
 
@@ -50,7 +51,7 @@ func init() {
 		"evidence",
 		"e",
 		"",
-		"The filename of the JSON-encoded evidence resource descriptor",
+		"The filename of the JSON-encoded evidence file",
 	)
 
 	rootCmd.Flags().BoolVar(
@@ -68,17 +69,10 @@ func genAttestation(_ *cobra.Command, args []string) error {
 	}
 
 	// read in the subject file
-	//subjectFile := args[0]
-	//subject, err := generators.NewRdForFile(subjectFile, "", "", "sha256", false, "", "", nil)
-	//if err != nil {
-	//	return fmt.Errorf("error generating RD for subject %s: %w", subjectFile, err)
-	//}
-
-	// generate dummy VM instance subject
-	subject := &ita.ResourceDescriptor{
-		Name:    "someVMInstance",
-		Content: []byte("vmID"),
-		Digest:  map[string]string{"alg": "5001ee7"},
+	subjectFile := args[0]
+	subject, err := generators.NewRdForFile(subjectFile, "vmID", "", "sha256", true, "application/x-pem-file", "examples/vm.id", nil)
+	if err != nil {
+		return fmt.Errorf("failed to generate RD for subject %s: %w", subjectFile, err)
 	}
 
 	// generate dummy SLSA provenance
@@ -88,10 +82,14 @@ func genAttestation(_ *cobra.Command, args []string) error {
 		MediaType: "application/vnd.in-toto.provenance+dsse",
 	}
 
-	st, err := internal.NewRefValueStatement([]*ita.ResourceDescriptor{subject}, "VM image", target, evidenceFile)
+	st, err := internal.NewRefValueStatement([]*ita.ResourceDescriptor{subject}, "image_ref_value", target, evidenceFile)
 	if err != nil {
-		return fmt.Errorf("error generating reference value: %w", err)
+		return fmt.Errorf("failed to generate reference value: %w", err)
 	}
 
 	return fileio.WritePbToFile(st, outFile, prettyPrint)
+}
+
+func main() {
+	Execute()
 }

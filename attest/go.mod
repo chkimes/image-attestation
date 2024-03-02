@@ -7,7 +7,7 @@ toolchain go1.21.5
 require (
 	github.com/google/go-tpm v0.9.0
 	github.com/in-toto/attestation v1.0.1
-	github.com/in-toto/scai-demos v0.0.0-00010101000000-000000000000
+	github.com/in-toto/scai-demos v0.0.0-20240220232204-73d6bc2c1cbd
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	google.golang.org/protobuf v1.32.0
